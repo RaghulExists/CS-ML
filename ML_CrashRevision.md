@@ -234,16 +234,60 @@ Underst.  Underst. Prep.      ↑__________↓ (loop back)
 
 ---
 
-## 🔢 MODULE 2 NUMERICALS (fast method)
+## 🔢 MODULE 2 NUMERICALS (full solutions)
 
-**(A) Counting** (attribute i has nᵢ values):
-- Instances = ∏ nᵢ → EnjoySport: 3×2×2×2×2×2 = **96**
-- Syntactic hypotheses = ∏ (nᵢ + 2) → 5×4×4×4×4×4 = **5120**
-- Semantic hypotheses = ∏ (nᵢ + 1) + 1 → 4×3×3×3×3×3 + 1 = **973**
+### (A) Counting Distinct Instances & Hypotheses (EnjoySport)
 
-**(B) FIND-S trace** — start ⟨∅,…,∅⟩, for each **positive** example keep matching attributes, replace mismatches with "?", skip negatives. (Face example answer: **⟨?,?,?,?,Yes,?⟩**.)
+Attributes & values: Sky(3), AirTemp(2), Humidity(2), Wind(2), Water(2), Forecast(2).
 
-**(C) Candidate Elimination trace** — keep S and G tables; positive → generalise S; negative → specialise G. (If no hypothesis fits all data → **empty version space** = concept not representable in H.)
+**Distinct instances** = product of number of values:
+= 3 × 2 × 2 × 2 × 2 × 2 = 3 × 32 = **96**
+
+**Syntactically distinct hypotheses** = ∏ (nᵢ + 2) [each attribute: a value, OR "?", OR "∅"]:
+= (3+2)(2+2)(2+2)(2+2)(2+2)(2+2) = 5 × 4 × 4 × 4 × 4 × 4 = 5 × 1024 = **5120**
+
+**Semantically distinct hypotheses** = ∏ (nᵢ + 1) + 1 [value or "?"; all-∅ collapse to 1 null]:
+= (3+1)(2+1)(2+1)(2+1)(2+1)(2+1) + 1 = 4 × 3 × 3 × 3 × 3 × 3 + 1 = 4 × 243 + 1 = 972 + 1 = **973**
+
+---
+
+### (B) FIND-S Trace (Face dataset)
+
+Attributes: Eyes, Nose, Head, Fcolor, Hair, Smile.
+
+| # | Example | Class | h after step |
+|---|---------|-------|--------------|
+| init | — | — | ⟨∅,∅,∅,∅,∅,∅⟩ |
+| 1 | Round,Triangle,Round,Purple,Yes,Yes | **+** | ⟨Round,Triangle,Round,Purple,Yes,Yes⟩ |
+| 2 | Square,Square,Square,Green,Yes,No | **+** | ⟨?,?,?,?,Yes,?⟩ |
+| 3 | Square,Triangle,Round,Yellow,Yes,Yes | **+** | ⟨?,?,?,?,Yes,?⟩ (no change) |
+| 4 | Round,Triangle,Round,Green,No,No | **−** | SKIP (negative) |
+| 5 | Square,Square,Round,Yellow,Yes,Yes | **+** | ⟨?,?,?,?,Yes,?⟩ (no change) |
+
+**Step logic:** Ex1 sets h to itself. Ex2: every attribute except Hair differs from h → replace those with "?", Hair stays Yes. Ex3 & Ex5 already match (all "?" + Hair=Yes). Ex4 skipped (negative).
+
+**Final hypothesis: h = ⟨?, ?, ?, ?, Yes, ?⟩** → "A face is in the concept iff Hair = Yes."
+
+---
+
+### (C) Candidate Elimination Trace (Car dataset — empty VS case)
+
+Attributes: Origin(Japan/USA), Mfr(Honda/Toyota/Chrysler), Color(Blue/Green/Red/White), Decade, Type(Economy/Sports).
+
+| After Example (label) | S | G |
+|------------------------|---|---|
+| Init | {⟨∅,∅,∅,∅,∅⟩} | {⟨?,?,?,?,?⟩} |
+| 1 (Japan,Honda,Blue,1980,Economy) **+** | {⟨J,Ho,Bl,1980,E⟩} | {⟨?,?,?,?,?⟩} |
+| 2 (Japan,Toyota,Green,1970,Sports) **−** | {⟨J,Ho,Bl,1980,E⟩} | {⟨?,Ho,?,?,?⟩,⟨?,?,Bl,?,?⟩,⟨?,?,?,1980,?⟩,⟨?,?,?,?,E⟩} |
+| 3 (Japan,Toyota,Blue,1990,Economy) **+** | {⟨J,?,Bl,?,E⟩} | {⟨?,?,Bl,?,?⟩,⟨?,?,?,?,E⟩} |
+| 4 (USA,Chrysler,Red,1980,Economy) **−** | {⟨J,?,Bl,?,E⟩} | {⟨?,?,Bl,?,?⟩,⟨J,?,?,?,E⟩} |
+| 5 (Japan,Honda,White,1980,Economy) **+** | {⟨J,?,?,?,E⟩} | {⟨J,?,?,?,E⟩} |
+| 6 (Japan,Toyota,Green,1980,Economy) **+** | {⟨J,?,?,?,E⟩} | {⟨J,?,?,?,E⟩} |
+| 7 (Japan,Honda,Red,1990,Economy) **−** | { } | { } |
+
+**Conclusion:** After Ex7, S would need to reject a negative it currently covers (⟨J,?,?,?,E⟩ also matches the Red negative) → **version space becomes EMPTY**. Meaning: the true concept ("Japanese Economy but NOT Red") is a *negation*, which **cannot be represented** in the conjunctive hypothesis space H. (Great point to state in the exam.)
+
+**General rule to remember:** Positive → generalise S (and drop inconsistent G members). Negative → specialise G (and drop inconsistent S members).
 
 ---
 ---
@@ -337,16 +381,66 @@ Underst.  Underst. Prep.      ↑__________↓ (loop back)
 
 ---
 
-## 🔢 MODULE 3 NUMERICALS (fast method)
+## 🔢 MODULE 3 NUMERICALS (full solutions)
 
-**(A) Entropy + Info Gain:**
-1. H(S) = −Σ pᵢ log₂ pᵢ for the whole set.
-2. For attribute A: split into subsets, compute each H(Sᵥ), then Gain = H(S) − Σ(|Sᵥ|/|S|)H(Sᵥ).
-3. Highest gain wins.
-- *Useful log₂ values:* log₂(½)=−1, log₂(⅓)=−1.585, log₂(⅔)=−0.585, log₂(¼)=−2, log₂(¾)=−0.415, log₂(⅕)=−2.322, log₂(⅖)=−1.322, log₂(⅗)=−0.737, log₂(⅘)=−0.322.
-- *PlayTennis pre-computed:* H(S)=0.940, Gain(Outlook)=**0.246**, Gain(Humidity)=**0.152**.
+*Useful log₂ values:* log₂(½)=−1, log₂(⅓)=−1.585, log₂(⅔)=−0.585, log₂(¼)=−2, log₂(¾)=−0.415, log₂(⅕)=−2.322, log₂(⅖)=−1.322, log₂(⅗)=−0.737, log₂(⅘)=−0.322, log₂(3/7)=−1.222, log₂(4/7)=−0.807, log₂(6/7)=−0.222, log₂(1/7)=−2.807.
 
-**(B) Boolean function decision trees:** test one variable per node, branch True/False, leaf = output. E.g. **A ∧ ¬B**: test A → if No: No; if Yes: test B → B=Yes: No, B=No: Yes.
+### (A) PlayTennis — Entropy + Information Gain (14 examples: 9 Yes, 5 No)
+
+**Step 1 — Entropy of whole set S:**
+H(S) = −(9/14)log₂(9/14) − (5/14)log₂(5/14)
+= −(0.643)(−0.637) − (0.357)(−1.486)
+= 0.410 + 0.530 = **0.940 bits**
+
+**Step 2 — Gain(S, Outlook).** Split: Sunny(2Y,3N)=5, Overcast(4Y,0N)=4, Rain(3Y,2N)=5.
+- H(Sunny) = −(2/5)log₂(2/5) − (3/5)log₂(3/5) = (0.4)(1.322)+(0.6)(0.737) = 0.529+0.442 = **0.971**
+- H(Overcast) = 0 (pure — all Yes)
+- H(Rain) = −(3/5)log₂(3/5) − (2/5)log₂(2/5) = **0.971** (same as Sunny)
+
+Gain(Outlook) = 0.940 − [(5/14)(0.971) + (4/14)(0) + (5/14)(0.971)]
+= 0.940 − [0.347 + 0 + 0.347] = 0.940 − 0.694 = **0.246 bits**
+
+**Step 3 — Gain(S, Humidity).** Split: High(3Y,4N)=7, Normal(6Y,1N)=7.
+- H(High) = −(3/7)log₂(3/7) − (4/7)log₂(4/7) = (0.429)(1.222)+(0.571)(0.807) = 0.524+0.461 = **0.985**
+- H(Normal) = −(6/7)log₂(6/7) − (1/7)log₂(1/7) = (0.857)(0.222)+(0.143)(2.807) = 0.190+0.401 = **0.592**
+
+Gain(Humidity) = 0.940 − [(7/14)(0.985) + (7/14)(0.592)] = 0.940 − [0.492+0.296] = 0.940 − 0.789 = **0.152 bits**
+
+**(For completeness:** Gain(Wind)=0.048, Gain(Temperature)=0.029.)
+
+**Step 4 — Decide root:** Highest gain = **Outlook (0.246)** → chosen as the root node.
+
+Final tree: Outlook → {Sunny→test Humidity (High=No, Normal=Yes); Overcast→Yes; Rain→test Wind (Strong=No, Weak=Yes)}.
+
+---
+
+### (B) Customer Records — Entropy & Gain on "Discount Offered" (10 examples: 6 Yes, 4 No)
+
+Discount=Yes: 4 purchased, 1 not (5 total). Discount=No: 2 purchased, 3 not (5 total).
+
+**Step 1 — H(S):** = −(6/10)log₂(6/10) − (4/10)log₂(4/10) = (0.6)(0.737)+(0.4)(1.322) = 0.442+0.529 = **0.971 bits**
+
+**Step 2 — Subset entropies:**
+- H(Discount=Yes): −(4/5)log₂(4/5) − (1/5)log₂(1/5) = (0.8)(0.322)+(0.2)(2.322) = 0.258+0.464 = **0.722**
+- H(Discount=No): −(2/5)log₂(2/5) − (3/5)log₂(3/5) = (0.4)(1.322)+(0.6)(0.737) = 0.529+0.442 = **0.971**
+
+**Step 3 — Gain:** = 0.971 − [(5/10)(0.722) + (5/10)(0.971)] = 0.971 − [0.361+0.486] = 0.971 − 0.847 = **0.124 bits**
+
+**Conclusion:** Gain = 0.124 > 0, so "Discount Offered" IS a useful (appropriate) attribute for splitting, but only moderately discriminating (the Discount=No branch is still impure, 0.971).
+
+---
+
+### (C) Boolean Function Decision Trees
+
+Rule: test ONE variable per node, branch on its value (Yes/No or T/F), leaf = output.
+
+**(a) A ∨ (B ∧ C):** Test A → A=Yes: **Yes**. A=No: test B → B=No: **No**; B=Yes: test C → C=Yes: **Yes**, C=No: **No**.
+
+**(b) (A ∧ B) ∨ (C ∧ D):** Test A → A=Yes: test B (B=Yes:**Yes**; B=No: test C→D...). A=No: test C → C=Yes: test D (D=Yes:**Yes**, D=No:**No**); C=No:**No**.
+
+**(c) A ∧ ¬B:** Test A → A=No: **No**. A=Yes: test B → B=Yes: **No**, B=No: **Yes**.
+
+**(d) A XOR B:** Test A → A=No: test B (B=Yes:**Yes**, B=No:**No**). A=Yes: test B (B=Yes:**No**, B=No:**Yes**). (Exactly one true → Yes.)
 
 ---
 ---
@@ -449,22 +543,111 @@ Underst.  Underst. Prep.      ↑__________↓ (loop back)
 
 ---
 
-## 🔢 MODULE 4 NUMERICALS (fast method)
+## 🔢 MODULE 4 NUMERICALS (full solutions)
 
-**(A) MAP problems (cancer, cricket, spam)** — for each hypothesis compute **P(D|h)·P(h)**, pick the largest; normalise by dividing by their sum.
+**General MAP method:** for each hypothesis compute (prior × likelihood) = P(h)·P(D|h); pick the largest = h_MAP. To get actual probabilities, normalise: divide each by the sum.
 
-- **Cancer:** P(cancer)=0.008, P(+|cancer)=0.98, P(+|¬cancer)=0.03.
-  - cancer: 0.98×0.008 = **0.00784**; ¬cancer: 0.03×0.992 = **0.02976** → **h_MAP = ¬cancer** (79% no cancer despite + test).
-- **Cricket:** T0: 0.30×0.95 = **0.285**; T1: 0.75×0.05 = **0.0375** → **Team 0 wins** (88%).
-- **Spam:** spam: 0.95×0.80 = **0.76**; not: 0.05×0.20 = **0.01** → **Spam** (98.7%).
+### (A) Cancer Diagnosis (MAP)
 
-**(B) Naive Bayes (PlayTennis / Car-stolen)** — compute P(class)·∏P(aᵢ|class) for each class, pick higher.
-- **PlayTennis** ⟨Sunny,Cool,High,Strong⟩: Yes = (9/14)(2/9)(3/9)(3/9)(3/9)=**0.0053**; No = (5/14)(3/5)(1/5)(4/5)(3/5)=**0.0206** → **No** (79.5%).
-- **Car stolen** ⟨Red,SUV,Domestic⟩: Yes=0.5×(3/5)(1/5)(2/5)=**0.024**; No=0.5×(2/5)(3/5)(3/5)=**0.072** → **No / not stolen** (75%).
+Given: P(cancer)=0.008, P(¬cancer)=0.992. P(+|cancer)=0.98, P(+|¬cancer)=1−0.97=0.03. Test result = **positive**.
 
-**(C) BBN joint/marginal** (Cloudy→Rain→Wet):
-- Joint: P(C,R,W) = P(C)·P(R|C)·P(W|R). E.g. P(C=T,R=T,W=T)=0.6×0.7×0.9 = **0.378**.
-- Marginal: P(W=T) = sum over hidden vars = **0.50** (here).
+- P(+|cancer)·P(cancer) = 0.98 × 0.008 = **0.00784**
+- P(+|¬cancer)·P(¬cancer) = 0.03 × 0.992 = **0.02976**
+
+Normalise: total = 0.00784 + 0.02976 = 0.0376
+- P(cancer|+) = 0.00784 / 0.0376 = **0.2085 (≈20.9%)**
+- P(¬cancer|+) = 0.02976 / 0.0376 = **0.7915 (≈79.1%)**
+
+**h_MAP = ¬cancer.** Despite a positive test, the patient most likely does NOT have cancer — because the disease is very rare (low prior), false positives outnumber true positives.
+
+---
+
+### (B) Cricket Match (MAP)
+
+Given: P(T0 wins)=0.95, P(T1 wins)=0.05. P(at T1's field | T0 wins)=0.30, P(at T1's field | T1 wins)=0.75. Match is **at Team 1's field**.
+
+- P(field|T0)·P(T0) = 0.30 × 0.95 = **0.285**
+- P(field|T1)·P(T1) = 0.75 × 0.05 = **0.0375**
+
+Normalise: total = 0.285 + 0.0375 = 0.3225
+- P(T0 wins | field) = 0.285 / 0.3225 = **0.8837 (≈88.4%)**
+- P(T1 wins | field) = 0.0375 / 0.3225 = **0.1163 (≈11.6%)**
+
+**h_MAP = Team 0 wins** — Team 0's strong overall record (0.95 prior) outweighs Team 1's home advantage.
+
+---
+
+### (C) Spam Classifier (MAP)
+
+Given: P(spam)=0.80, P(¬spam)=0.20. P(phrase|spam)=0.95, P(phrase|¬spam)=0.05. Email **contains the phrase**.
+
+- P(phrase|spam)·P(spam) = 0.95 × 0.80 = **0.76**
+- P(phrase|¬spam)·P(¬spam) = 0.05 × 0.20 = **0.01**
+
+Normalise: total = 0.76 + 0.01 = 0.77
+- P(spam|phrase) = 0.76 / 0.77 = **0.987 (≈98.7%)**
+- P(¬spam|phrase) = 0.01 / 0.77 = **0.013 (≈1.3%)**
+
+**h_MAP = Spam.** Both the prior and likelihood favour spam → very high posterior.
+
+---
+
+### (D) Naive Bayes — PlayTennis, classify ⟨Outlook=Sunny, Temp=Cool, Humidity=High, Wind=Strong⟩
+
+Dataset: 9 Yes, 5 No. **Priors:** P(Yes)=9/14, P(No)=5/14.
+
+**Conditional probabilities (count within each class):**
+- Among 9 Yes: Sunny=2/9, Cool=3/9, High=3/9, Strong=3/9.
+- Among 5 No: Sunny=3/5, Cool=1/5, High=4/5, Strong=3/5.
+
+**Score(Yes)** = (9/14)·(2/9)·(3/9)·(3/9)·(3/9)
+= 0.643 × 0.222 × 0.333 × 0.333 × 0.333 = **0.00529**
+
+**Score(No)** = (5/14)·(3/5)·(1/5)·(4/5)·(3/5)
+= 0.357 × 0.6 × 0.2 × 0.8 × 0.6 = **0.02057**
+
+Normalise: total = 0.00529 + 0.02057 = 0.02586
+- P(Yes) = 0.00529/0.02586 = **0.205 (≈20.5%)**
+- P(No) = 0.02057/0.02586 = **0.795 (≈79.5%)**
+
+**Answer: PlayTennis = No** (do not play).
+
+---
+
+### (E) Naive Bayes — Car Stolen, classify ⟨Color=Red, Type=SUV, Origin=Domestic⟩
+
+Dataset: 5 Yes (stolen), 5 No. **Priors:** P(Yes)=5/10=0.5, P(No)=0.5.
+
+**Conditionals:**
+- Among 5 Yes: Red=3/5, SUV=1/5, Domestic=2/5.
+- Among 5 No: Red=2/5, SUV=3/5, Domestic=3/5.
+
+**Score(Yes)** = 0.5 × (3/5) × (1/5) × (2/5) = 0.5 × 0.6 × 0.2 × 0.4 = **0.024**
+**Score(No)** = 0.5 × (2/5) × (3/5) × (3/5) = 0.5 × 0.4 × 0.6 × 0.6 = **0.072**
+
+Normalise: total = 0.024 + 0.072 = 0.096
+- P(Yes) = 0.024/0.096 = **0.25 (25%)**
+- P(No) = 0.072/0.096 = **0.75 (75%)**
+
+**Answer: Stolen = No** (car will NOT be stolen).
+
+---
+
+### (F) Bayesian Network — Cloudy(C) → Rain(R) → WetGrass(W)
+
+Given: P(C=T)=0.6. P(R=T|C=T)=0.7, P(R=T|C=F)=0.2. P(W=T|R=T)=0.9, P(W=T|R=F)=0.1.
+
+**(i) Joint P(C=T, R=T, W=T):** Use chain rule P(C)·P(R|C)·P(W|R):
+= 0.6 × 0.7 × 0.9 = **0.378**
+
+**(ii) Marginal P(W=T):** First find P(R=T):
+P(R=T) = P(R=T|C=T)P(C=T) + P(R=T|C=F)P(C=F) = (0.7)(0.6) + (0.2)(0.4) = 0.42 + 0.08 = **0.50**
+So P(R=F) = 0.50.
+
+Then: P(W=T) = P(W=T|R=T)P(R=T) + P(W=T|R=F)P(R=F)
+= (0.9)(0.50) + (0.1)(0.50) = 0.45 + 0.05 = **0.50**
+
+**Answer: P(W=T) = 0.50.**
 
 ---
 ---
@@ -557,18 +740,74 @@ Classify xq:
 
 ---
 
-## 🔢 MODULE 5 NUMERICALS (fast method)
+## 🔢 MODULE 5 NUMERICALS (full solutions)
 
-**(A) kNN classification (Height/Weight):**
-- Compute d = √[(H−Hq)² + (W−Wq)²] for each, sort, take k nearest, majority vote.
-- *Query (170,57):* nearest 3 = D7(1.41,Normal), D9(2.0,Normal), D8(3.0,Normal) → **Normal**.
+### (A) kNN Classification — Height/Weight, classify Query (Height=170, Weight=57)
 
-**(B) kNN regression (Rani, Age=11, Gender=1):**
-- Distance on (Age, Gender); k=3 nearest = Smith(42.2), Sanjana(40.0), Pooja(50.2) → average = **44.13 kg**. (Note: Age dominates — ideally normalise.)
+Distance formula: d = √[(H − 170)² + (W − 57)²].
 
-**(C) Locally Weighted Regression (X=2.5, BW=1):**
-- Weight each point wᵢ = e^(−(xᵢ−2.5)²/2). Then prediction = Σwᵢyᵢ / Σwᵢ.
-- Answer = **≈ 2.77**.
+| Point | (H, W) | Calculation | Distance | Class |
+|-------|--------|-------------|----------|-------|
+| D7 | (169,58) | √(1+1)=√2 | **1.41** | Normal |
+| D9 | (170,55) | √(0+4)=√4 | **2.00** | Normal |
+| D8 | (173,57) | √(9+0)=√9 | **3.00** | Normal |
+| D6 | (174,56) | √(16+1)=√17 | 4.12 | Underweight |
+| D1 | (167,51) | √(9+36)=√45 | 6.71 | Underweight |
+| D4 | (173,64) | √(9+49)=√58 | 7.62 | Normal |
+| D5 | (172,65) | √(4+64)=√68 | 8.25 | Normal |
+| D2 | (182,62) | √(144+25)=√169 | 13.00 | Normal |
+| D3 | (176,69) | √(36+144)=√180 | 13.42 | Normal |
+
+**K=3 nearest:** D7, D9, D8 → all **Normal** → vote = Normal.
+**K=5 nearest:** D7, D9, D8 (Normal), D6, D1 (Underweight) → 3 Normal vs 2 Underweight → Normal.
+
+**Answer: Class = Normal** (robust for both k=3 and k=5).
+
+---
+
+### (B) kNN Regression — predict Weight of Rani (Age=11, Gender=1)
+
+This is **regression** (Weight is continuous) → predict by **averaging** the k nearest neighbours' weights.
+Distance: d = √[(Age − 11)² + (Gender − 1)²].
+
+| Name | (Age,Gen) | Calculation | Distance | Weight |
+|------|-----------|-------------|----------|--------|
+| Smith | (15,0) | √(16+1)=√17 | **4.12** | 42.2 |
+| Sanjana | (16,1) | √(25+0)=√25 | **5.00** | 40.0 |
+| Pooja | (20,1) | √(81+0)=√81 | **9.00** | 50.2 |
+| Anjali | (32,0) | √(441+1) | 21.02 | 55.2 |
+| Anjana | (34,1) | √(529+0) | 23.00 | 50.7 |
+| Madhu | (40,0) | √(841+1) | 29.02 | 48.5 |
+| Rahul | (40,0) | √(841+1) | 29.02 | 48.5 |
+| Laxmi | (55,1) | √(1936+0) | 44.00 | 67.0 |
+| Saket | (55,0) | √(1936+1) | 44.01 | 75.6 |
+
+**K=3 nearest:** Smith(42.2), Sanjana(40.0), Pooja(50.2).
+Predicted weight = (42.2 + 40.0 + 50.2) / 3 = 132.4 / 3 = **44.13 kg**.
+
+(K=1 → Smith → 42.2 kg.) Note: Age dominates distance because its range is far larger than Gender (0/1); ideally normalise both attributes first.
+
+---
+
+### (C) Locally Weighted Regression — predict at X=2.5, Bandwidth τ=1
+
+Data: X = [1,2,3,4], Y = [2,3,2,5]. Kernel weight: wᵢ = e^(−(xᵢ−2.5)² / (2·1²)).
+
+| xᵢ | (xᵢ−2.5)² | wᵢ = e^(−d²/2) | yᵢ | wᵢ·yᵢ |
+|----|-----------|----------------|----|-------|
+| 1 | 2.25 | e^(−1.125)=**0.3247** | 2 | 0.6494 |
+| 2 | 0.25 | e^(−0.125)=**0.8825** | 3 | 2.6475 |
+| 3 | 0.25 | e^(−0.125)=**0.8825** | 2 | 1.7650 |
+| 4 | 2.25 | e^(−1.125)=**0.3247** | 5 | 1.6235 |
+
+Σwᵢ = 0.3247 + 0.8825 + 0.8825 + 0.3247 = **2.4144**
+Σwᵢyᵢ = 0.6494 + 2.6475 + 1.7650 + 1.6235 = **6.6854**
+
+**Prediction (weighted average):** f̂(2.5) = Σwᵢyᵢ / Σwᵢ = 6.6854 / 2.4144 = **2.77**
+
+(If you do the full weighted linear fit instead: ŷ = 1.43 + 0.54x → at x=2.5 gives 1.43 + 1.34 = **2.77** — same answer, due to symmetry of the weights around 2.5.)
+
+**Answer: f̂(2.5) ≈ 2.77.**
 
 ---
 ---
